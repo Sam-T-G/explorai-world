@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ExplorAI · The AI club at RCC</title>
+<meta name="description" content="ExplorAI is the AI club at Riverside City College. Learn what AI is and how to build things with it. Wednesdays, 2:00 to 3:00 pm, CIS A-204.">
+<meta name="theme-color" content="#F4F7E6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Cellipse cx=%2732%27 cy=%2722%27 rx=%2728%27 ry=%2714%27 fill=%27%23F2C1D6%27/%3E%3Crect x=%276%27 y=%2726%27 width=%2752%27 height=%2712%27 rx=%276%27 fill=%27%23FFFBF5%27/%3E%3Cellipse cx=%2732%27 cy=%2742%27 rx=%2728%27 ry=%2714%27 fill=%27%23D9E8AD%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,100&family=DM+Sans:wght@400..700&display=swap">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<style>
+/* Tokens are the meeting decks' palette and type (pcolee/explorAI CLAUDE.md, Deck contract). Light theme only. */
+:root{--ink:#3F5A2A;--body:#4D5845;--accent:#A8487A;--green:#D9E8AD;--pink:#F2C1D6;--mint:#F4F7E6;--cream:#FFFBF5;--card:#FFFEFB;--sand:#F4ECDD;--pinkwash:#FBE6EF;--leaf:#9CB57B;--wash:#EEF4DA;
+--display:'Fraunces',Georgia,serif;--sans:'DM Sans',Arial,sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{overflow:hidden;color:var(--body);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;
+background:radial-gradient(1100px 820px at 96% 0%,rgba(242,193,214,.6),transparent 62%),radial-gradient(1200px 900px at 0% 100%,rgba(217,232,173,.8),transparent 60%),var(--cream);background-attachment:fixed}
+h1,h2,h3,p,ol,ul,dl,dd{margin:0}
+a{color:var(--accent)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+#world{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+#world.hover{cursor:pointer}
+#world.drag{cursor:grabbing}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:.07;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25 0 0 0 0 .35 0 0 0 0 .16 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* Top bar: wordmark, places, text version */
+.bar{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;gap:14px;padding:14px 18px;pointer-events:none}
+.bar>*{pointer-events:auto}
+.mark{display:flex;align-items:baseline;gap:8px;text-decoration:none;color:var(--ink);font:600 30px/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
+.mark span{font:700 12px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.places{display:flex;gap:4px;margin:0 auto;padding:5px;border-radius:999px;background:rgba(255,254,251,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1.5px rgba(217,232,173,.85),0 14px 30px -20px rgba(63,90,42,.5)}
+.places a{font:700 15px/1 var(--sans);color:var(--ink);text-decoration:none;padding:10px 16px;border-radius:999px;white-space:nowrap;transition:background .25s,color .25s}
+.places a:hover{background:var(--wash)}
+.places a[aria-current="true"]{background:var(--pinkwash);color:var(--accent)}
+.pill{font:700 14px/1 var(--sans);color:var(--ink);background:rgba(255,254,251,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:0;border-radius:999px;padding:12px 16px;cursor:pointer;white-space:nowrap;box-shadow:inset 0 0 0 1.5px rgba(217,232,173,.85)}
+.pill:hover{background:var(--wash)}
+
+/* Floating place names over the world */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.label{position:absolute;left:0;top:0;pointer-events:auto;border:0;cursor:pointer;white-space:nowrap;font:600 21px/1 var(--display);color:var(--ink);background:rgba(255,254,251,.9);padding:9px 18px 10px;border-radius:999px;box-shadow:0 12px 26px -16px rgba(63,90,42,.55),inset 0 0 0 1.5px rgba(217,232,173,.9);transition:background .25s,color .25s,opacity .3s;will-change:transform}
+.label.hot,.label:hover{background:var(--pinkwash);color:var(--accent)}
+.label.on{background:var(--accent);color:var(--cream);box-shadow:0 12px 26px -14px rgba(168,72,122,.7)}
+.label.small{font:700 13px/1.2 var(--sans);padding:7px 12px;color:var(--ink);background:rgba(255,254,251,.94);opacity:0;pointer-events:none;transition:opacity .35s}
+.label.small b{color:var(--accent);margin-right:4px}
+.label.small.show{opacity:1;pointer-events:auto}
+.label.small.next{background:var(--pinkwash)}
+.label[hidden]{display:none}
+
+/* The card for the place you are at. Styled like the decks' question card. */
+#panel{position:fixed;z-index:5;top:80px;right:18px;bottom:18px;width:min(430px,calc(100vw - 36px));pointer-events:none;display:flex;flex-direction:column}
+.station{display:none;position:relative;pointer-events:auto;max-height:100%;overflow:auto;overscroll-behavior:contain;padding:30px 28px 28px;border-radius:34px;background:rgba(255,254,251,.88);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:inset 0 0 0 1.5px rgba(217,232,173,.9),0 34px 70px -36px rgba(63,90,42,.5);scrollbar-width:thin}
+.station.on{display:block;animation:place .7s cubic-bezier(.2,.8,.2,1) backwards}
+.station>*+*{margin-top:16px}
+.close{position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:50%;border:0;background:var(--wash);color:var(--ink);font:600 22px/1 var(--sans);cursor:pointer;display:grid;place-items:center}
+.close:hover{background:var(--pinkwash);color:var(--accent)}
+.eyebrow{display:inline-block;font:700 12px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--accent);background:var(--pinkwash);padding:8px 14px;border-radius:999px}
+.station h2{font:600 34px/1.1 var(--display);color:var(--ink);letter-spacing:-.01em;padding-right:34px}
+.station .eyebrow+h2{margin-top:14px}
+.lead{font-size:18px;line-height:1.5;color:var(--body)}
+.small{font-size:14px;line-height:1.5;color:var(--body)}
+
+/* Taped note, from the decks' .sticky */
+.sticky{position:relative;list-style:none;background:#FFFDF7;border-radius:18px;padding:22px 20px 18px;rotate:var(--r,0deg);box-shadow:0 1px 0 rgba(63,90,42,.05),0 18px 34px -22px rgba(63,90,42,.45)}
+.sticky::before{content:'';position:absolute;top:-10px;left:50%;width:84px;height:22px;margin-left:-42px;rotate:-3deg;background:rgba(242,193,214,.85);border-radius:5px}
+.sticky.p{background:#FDF1F6}.sticky.p::before{background:rgba(217,232,173,.95)}
+.sticky.g{background:#F5F9E8}
+.sticky .tag{display:block;font:700 11px/1.3 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.sticky b{display:block;font:600 24px/1.15 var(--display);color:var(--ink);margin-top:6px}
+.sticky p{font-size:15px;line-height:1.45;margin-top:6px}
+.sticky a{display:inline-block;margin-top:10px;font:700 13px/1 var(--sans);color:var(--ink);text-decoration:none;background:var(--wash);padding:8px 12px;border-radius:999px}
+.sticky a:hover{background:var(--pinkwash);color:var(--accent)}
+
+.when b{font-size:30px}
+.next-up{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:15px;color:var(--ink)}
+.next-up .k{font:700 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.next-up b{font:600 18px/1.2 var(--display)}
+.next-up .in{font-weight:700;background:var(--green);padding:6px 11px;border-radius:999px;font-size:13px}
+.next-up.live .in{background:var(--accent);color:var(--cream)}
+.next-up[hidden]{display:none}
+
+.notes{padding:6px 0 0;display:flex;flex-direction:column;gap:22px}
+.notes .sticky:nth-child(4n+1){--r:-.6deg}.notes .sticky:nth-child(4n+2){--r:.5deg}.notes .sticky:nth-child(4n+3){--r:-.3deg}.notes .sticky:nth-child(4n){--r:.7deg}
+.notes .sticky:nth-child(even){background:#F5F9E8}
+.notes .sticky.is-next{background:#FDF1F6;box-shadow:0 0 0 2px rgba(168,72,122,.45),0 18px 34px -22px rgba(63,90,42,.45)}
+.notes .sticky.is-next::before{background:rgba(217,232,173,.95)}
+.notes .badge{display:inline-block;margin-left:8px;font:700 10px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--cream);background:var(--accent);padding:4px 7px;border-radius:999px;vertical-align:1px}
+.notes .sticky.flash{animation:flash 1.2s ease}
+
+/* 0 to 5 vote bar, from the decks' .spectrum */
+.claim{font-style:normal}
+.spectrum{display:flex;flex-direction:column;gap:8px}
+.spectrum .bar5{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:999px;background:linear-gradient(90deg,#F2C1D6,#FBF4EC 50%,#D9E8AD)}
+.spectrum button{width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;background:rgba(255,254,251,.94);font:600 22px/1 var(--display);color:var(--ink);box-shadow:0 6px 14px -8px rgba(63,90,42,.45);transition:transform .25s cubic-bezier(.34,1.56,.64,1),background .25s,color .25s}
+.spectrum button:first-child{color:var(--accent)}
+.spectrum button:hover{transform:scale(1.08)}
+.spectrum button[aria-pressed="true"]{background:var(--accent);color:var(--cream);transform:scale(1.12)}
+.spectrum .ends{display:flex;justify-content:space-between;padding:0 6px;font:700 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.spectrum .ends span:first-child{color:var(--accent)}
+.status{font-weight:700;color:var(--ink)}
+.bubbles{display:flex;flex-direction:column;gap:12px}
+.bubbles[hidden]{display:none}
+.bubble{position:relative;font-size:16px;line-height:1.4;color:var(--ink);background:var(--card);padding:12px 18px;border-radius:22px 22px 22px 6px;max-width:92%;align-self:flex-start;box-shadow:0 12px 26px -18px rgba(63,90,42,.45);transform-origin:0 100%}
+.bubble:nth-child(even){align-self:flex-end;border-radius:22px 22px 6px 22px;background:var(--pinkwash);transform-origin:100% 100%}
+.bubble:nth-child(3){background:#EEF4DA}
+.bubbles.go .bubble{animation:bubbleIn .55s cubic-bezier(.34,1.4,.64,1) backwards,bubbleText .3s ease backwards}
+.bubbles.go .bubble:nth-child(1){animation-delay:.05s,.55s}.bubbles.go .bubble:nth-child(2){animation-delay:.5s,1s}.bubbles.go .bubble:nth-child(3){animation-delay:.95s,1.45s}
+.rule{font:600 18px/1.3 var(--display);color:var(--ink);border-left:3px solid var(--pink);padding-left:14px}
+
+/* The recipe, from Meeting 3 and 5's recipe table */
+.recipe{display:flex;flex-direction:column;gap:8px}
+.recipe div{display:grid;grid-template-columns:76px 1fr;align-items:center;gap:12px;background:var(--card);border-radius:16px;padding:12px 16px;box-shadow:0 12px 26px -20px rgba(63,90,42,.5)}
+.recipe dt{font:600 22px/1 var(--display);color:var(--ink)}
+.recipe dd{font-size:15px;line-height:1.4}
+.recipe div:last-child{background:var(--pinkwash)}
+.recipe div:last-child dt{color:var(--accent)}
+
+/* Join */
+.links{display:flex;flex-wrap:wrap;gap:10px}
+.links a{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font:700 15px/1 var(--sans);color:var(--ink);background:var(--card);padding:10px 16px 10px 10px;border-radius:999px;box-shadow:inset 0 0 0 1.5px rgba(217,232,173,.95),0 12px 24px -18px rgba(63,90,42,.5)}
+.links a:hover{background:var(--pinkwash);color:var(--accent)}
+.links svg{width:26px;height:26px;flex:none}
+.roles ul{list-style:none;padding:0;margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.roles li{font-size:14.5px;line-height:1.4}
+.roles li strong{display:block;font:600 17px/1.2 var(--display);color:var(--ink)}
+
+#hint{position:fixed;left:18px;bottom:18px;z-index:4;margin:0;font:700 13px/1 var(--sans);color:var(--ink);background:rgba(255,254,251,.8);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:11px 16px;border-radius:999px;box-shadow:inset 0 0 0 1.5px rgba(217,232,173,.85);transition:opacity .6s}
+#hint.gone{opacity:0;pointer-events:none}
+#loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:inherit;transition:opacity .8s ease}
+#loading.gone{opacity:0;pointer-events:none}
+#loading p{font:600 44px/1 var(--display);color:var(--ink);animation:breathe 1.6s ease-in-out infinite}
+
+@keyframes place{0%{opacity:0;translate:0 -26px;scale:1.04;rotate:-1.5deg}60%{opacity:1;translate:0 2px;scale:.995;rotate:.3deg}}
+@keyframes bubbleIn{0%{opacity:0;scale:.7;translate:0 10px}60%{opacity:1}}
+@keyframes bubbleText{from{color:transparent}}
+@keyframes flash{0%,100%{scale:1}30%{scale:1.03;box-shadow:0 0 0 3px rgba(168,72,122,.5),0 0 30px 4px rgba(168,72,122,.25)}}
+@keyframes breathe{50%{opacity:.55;scale:.97}}
+
+/* Phones: the card is a sheet at the bottom, the places scroll under the wordmark */
+@media (max-width:760px){
+  .bar{flex-wrap:wrap;padding:12px 16px 0;gap:10px}
+  .mark{font-size:26px}
+  .bar .pill{margin-left:auto;padding:10px 13px;font-size:13px}
+  .places{order:3;width:100%;margin:0;overflow-x:auto;scrollbar-width:none;justify-content:space-between}
+  .places::-webkit-scrollbar{display:none}
+  .places a{padding:10px 12px;font-size:14px}
+  #panel{top:auto;left:12px;right:12px;bottom:12px;width:auto;max-height:52vh;max-height:52dvh}
+  .station{padding:24px 20px 22px;border-radius:28px}
+  .station h2{font-size:28px}
+  .lead{font-size:16.5px}
+  #hint{left:50%;translate:-50% 0;bottom:14px;white-space:nowrap}
+  .label{font-size:17px;padding:8px 14px 9px}
+}
+
+/* Text version: the same cards as one page */
+body.text{overflow:auto;height:auto}
+body.text #world,body.text #labels,body.text #hint{display:none}
+body.text .bar{position:sticky;padding-bottom:10px;background:linear-gradient(var(--cream) 70%,transparent)}
+body.text #panel{position:static;width:auto;max-width:720px;margin:24px auto 64px;padding:0 16px;pointer-events:auto;gap:28px}
+body.text .station{display:block;overflow:visible;max-height:none;animation:none;scroll-margin-top:96px}
+body.text .close{display:none}
+body.text .bubbles.go .bubble{animation:none}
+body.no3d #mode{display:none}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="world" tabindex="-1" aria-hidden="true"></canvas>
+<div id="labels" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="bar">
+  <a class="mark" href="#about" data-go="about">ExplorAI<span>@ RCC</span></a>
+  <nav class="places" aria-label="Places">
+    <a href="#about" data-go="about">About</a>
+    <a href="#meetings" data-go="meetings">Meetings</a>
+    <a href="#argue" data-go="argue">Argue</a>
+    <a href="#build" data-go="build">Build</a>
+    <a href="#join" data-go="join">Join</a>
+  </nav>
+  <button id="mode" class="pill" type="button">Text version</button>
+</header>
+
+<main id="panel">
+  <article class="station" id="about" data-station="about" aria-labelledby="about-h">
+    <p class="eyebrow">ExplorAI @ RCC</p>
+    <h2 id="about-h">The AI club at Riverside City College</h2>
+    <p class="lead">Learn what AI is and how to build things with it. Any major, any experience level. No coding needed.</p>
+    <div class="sticky g when">
+      <span class="tag">Every week</span>
+      <b>Wednesdays</b>
+      <p data-fill="time">2:00 to 3:00 pm · CIS A-204</p>
+    </div>
+    <p class="next-up" data-next hidden><span class="k">Next meeting</span><b data-next-what></b><span class="in" data-next-in></span></p>
+  </article>
+
+  <article class="station" id="meetings" data-station="meetings" aria-labelledby="meetings-h">
+    <p class="eyebrow">Fall 2026</p>
+    <h2 id="meetings-h">A new topic every Wednesday</h2>
+    <ol class="notes">
+      <li class="sticky" data-meeting="6" data-date="2026-10-28">
+        <span class="tag">Oct 28 · Meeting 6</span>
+        <b>Under the Hood</b>
+      </li>
+      <li class="sticky" data-meeting="5" data-date="2026-10-21">
+        <span class="tag">Oct 21 · Meeting 5</span>
+        <b>Build One Thing</b>
+        <p>Vibe coding in Google AI Studio. Describe an app in plain words, then build it.</p>
+        <a href="https://pcolee.github.io/explorAI/meetings/meeting-5/">Slides</a>
+      </li>
+      <li class="sticky" data-meeting="4" data-date="2026-10-14">
+        <span class="tag">Oct 14 · Meeting 4</span>
+        <b>Let’s argue about AI</b>
+        <p>No lecture. School, jobs, AI friends, data centers, and who should write the rules.</p>
+        <a href="https://pcolee.github.io/explorAI/meetings/meeting-4/">Slides</a>
+      </li>
+      <li class="sticky" data-meeting="3" data-date="2026-10-07">
+        <span class="tag">Oct 7 · Meeting 3</span>
+        <b>How AI reads your words</b>
+        <p>Tokens, the context window, and a recipe for better prompts.</p>
+        <a href="https://pcolee.github.io/explorAI/meetings/meeting-3/">Slides</a>
+      </li>
+      <li class="sticky" data-meeting="2" data-date="2026-09-30">
+        <span class="tag">Sep 30 · Meeting 2</span>
+        <b>What is AI, really?</b>
+        <p>How AI learns from examples, and why it can sound right and still be wrong.</p>
+        <a href="https://pcolee.github.io/explorAI/meetings/meeting-2/">Slides</a>
+      </li>
+    </ol>
+  </article>
+
+  <article class="station" id="argue" data-station="argue" aria-labelledby="argue-h">
+    <p class="eyebrow">Where do you stand?</p>
+    <h2 id="argue-h" class="claim">“AI is making us worse students.”</h2>
+    <div class="spectrum">
+      <div class="bar5" role="group" aria-label="Your vote, 0 to 5">
+        <button type="button" data-vote="0" aria-pressed="false" aria-label="0, totally disagree">0</button>
+        <button type="button" data-vote="1" aria-pressed="false">1</button>
+        <button type="button" data-vote="2" aria-pressed="false">2</button>
+        <button type="button" data-vote="3" aria-pressed="false">3</button>
+        <button type="button" data-vote="4" aria-pressed="false">4</button>
+        <button type="button" data-vote="5" aria-pressed="false" aria-label="5, totally agree">5</button>
+      </div>
+      <div class="ends"><span>Totally disagree</span><span>Totally agree</span></div>
+    </div>
+    <p class="status" data-vote-status>Stand on a number.</p>
+    <div class="bubbles" hidden>
+      <p class="bubble">Is it cheating if the syllabus never said no?</p>
+      <p class="bubble">Should RCC ban AI in intro classes?</p>
+      <p class="bubble">How should a professor know you did the work?</p>
+    </div>
+    <p class="rule">Disagree with the idea, never the person who said it.</p>
+    <p class="small">From Meeting 4. <a href="https://pcolee.github.io/explorAI/meetings/meeting-4/">Slides</a></p>
+  </article>
+
+  <article class="station" id="build" data-station="build" aria-labelledby="build-h">
+    <p class="eyebrow">The recipe</p>
+    <h2 id="build-h">Describe the app in plain words. The AI writes the code.</h2>
+    <dl class="recipe">
+      <div><dt>Who</dt><dd>Who you are, and who uses the app</dd></div>
+      <div><dt>What</dt><dd>What the app does, 3 features max</dd></div>
+      <div><dt>Why</dt><dd>What problem it solves</dd></div>
+      <div><dt>How</dt><dd>How it works, step by step</dd></div>
+      <div><dt>Looks</dt><dd>Layout, colors, vibe</dd></div>
+    </dl>
+    <p class="small">From Meeting 3 (prompts) and Meeting 5 (apps). <a href="https://pcolee.github.io/explorAI/meetings/meeting-5/">Meeting 5 slides</a></p>
+  </article>
+
+  <article class="station" id="join" data-station="join" aria-labelledby="join-h">
+    <p class="eyebrow">Join</p>
+    <h2 id="join-h">Come to any meeting</h2>
+    <p class="lead" data-fill="join">Wednesdays, 2:00 to 3:00 pm, CIS A-204. Bring a laptop if you have one.</p>
+    <div class="links">
+      <a href="https://www.instagram.com/explorai.rcc" data-icon="instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="ig" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset=".3" stop-color="#FA7E1E"/><stop offset=".55" stop-color="#D62976"/><stop offset=".8" stop-color="#962FBF"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><path fill="url(#ig)" d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></svg>@explorai.rcc</a>
+      <a href="https://discord.gg/wymCa4EPj" data-icon="discord"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#5865F2" d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>Discord</a>
+    </div>
+    <div class="sticky p roles">
+      <span class="tag">Officer roles</span>
+      <ul>
+        <li><strong>Secretary</strong>Meeting notes and club messages</li>
+        <li><strong>Technical Lead</strong>Coding projects, workshops, and learning resources</li>
+        <li><strong>Social Media Manager</strong>Photos and videos at events, posted online</li>
+        <li><strong>Engagement Chair</strong>New members, socials, and the Discord</li>
+      </ul>
+      <a href="https://forms.gle/d6vLSxUzxgZUN5Q69">Apply</a>
+    </div>
+  </article>
+</main>
+
+<p id="hint">Click the ground to walk. Drag to look around.</p>
+<div id="loading" aria-hidden="true"><p>ExplorAI</p></div>
+<script type="module" src="site.js"></script>
+<noscript><style>body{overflow:auto;height:auto}#loading,#world,#labels,#hint,#mode{display:none}#panel{position:static;width:auto;max-width:720px;margin:96px auto 64px;padding:0 16px;gap:28px}.station{display:block}</style></noscript>
+</body>
+</html>
